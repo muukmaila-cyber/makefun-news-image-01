@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""news-image-01 entry: write the front-page image to /output/entry.png.
+"""news-image-01 entry (v3): write the front-page image to /output/entry.png.
 
-The front page (16 verified stories of Friday 13 November 2026, drawn
-programmatically with PIL + one AI-generated lead photo) is bundled in this
-repository as entry.png. This program copies it byte-for-byte to the output
-path, so both grader runs write identical bytes. No network is used.
+The front page (18 verified stories of Friday 13 November 2026) is bundled
+in this repository as entry.png. v3 is a fully illustrated grid: every story
+has its own editorial illustration (three AI-generated contact sheets in
+illustrations/, sliced into 18 panels and composited by build_v3.py), with
+headlines, one-line summaries and data badges rendered in PIL. This program
+copies entry.png byte-for-byte to the output path, so both grader runs write
+identical bytes. No network is used.
 """
+import hashlib
 import os
 import shutil
 import struct
@@ -51,6 +55,15 @@ def main():
         return 1
     if os.path.getsize(out) > 1048576:
         print("output over the 1 MiB limit", file=sys.stderr)
+        return 1
+    def sha256(path):
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    if sha256(SRC) != sha256(out):
+        print("output differs from bundled entry.png", file=sys.stderr)
         return 1
     print("wrote", out, os.path.getsize(out), "bytes, %sx%s PNG" % dims)
     return 0
